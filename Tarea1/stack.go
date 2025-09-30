@@ -1,40 +1,37 @@
 package main
 
-// Stack represents a Last-In-First-Out (LIFO) data structure
-// where elements are added and removed from the top
-type Stack interface {
-	// Push adds an element to the top of the stack
-	Push(value interface{})
-
-	// Pop removes and returns the top element from the stack
-	// Returns nil if the stack is empty
-	Pop() interface{}
-
-	// Peek returns the top element without removing it
-	// Returns nil if the stack is empty
-	Peek() interface{}
-
-	// IsEmpty returns true if the stack has no elements
-	IsEmpty() bool
-
-	// Size returns the number of elements in the stack
-	Size() int
-
-	// Clear removes all elements from the stack
-	Clear()
+type Stack struct {
+	elements []interface{}
 }
 
-// ArrayStack implements Stack using a slice
-type ArrayStack struct {
-	// TODO: Add fields to store the stack data
-	// Hint: You might want to use a slice to store elements
+func (s *Stack) Push(value interface{}) {
+	s.elements = append(s.elements, value)
 }
 
-// NewArrayStack creates a new empty stack
-func NewArrayStack() *ArrayStack {
-	// TODO: Initialize and return a new ArrayStack
-	return nil
+func (s *Stack) Pop() interface{} {
+	if len(s.elements) == 0 {
+		return nil
+	}
+	top := s.elements[len(s.elements)-1]
+	s.elements = s.elements[:len(s.elements)-1]
+	return top
 }
 
-// TODO: Implement all Stack interface methods for ArrayStack
-// Remember to handle edge cases like empty stack operations
+func (s *Stack) Peek() interface{} {
+	if len(s.elements) == 0 {
+		return nil
+	}
+	return s.elements[len(s.elements)-1]
+}
+
+func (s *Stack) IsEmpty() bool {
+	return len(s.elements) == 0
+}
+
+func (s *Stack) Size() int {
+	return len(s.elements)
+}
+
+func (s *Stack) Clear() {
+	s.elements = []interface{}{}
+}

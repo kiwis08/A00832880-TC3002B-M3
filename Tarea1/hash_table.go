@@ -1,82 +1,145 @@
 package main
 
-// HashTable represents a key-value mapping data structure
-// that provides average O(1) time complexity for basic operations
-type HashTable interface {
-	// Put stores a key-value pair in the hash table
-	// If the key already exists, it updates the value
-	Put(key interface{}, value interface{})
+import (
+	"hash/fnv"
+)
 
-	// Get retrieves the value associated with the given key
-	// Returns nil if the key doesn't exist
-	Get(key interface{}) interface{}
-
-	// Delete removes the key-value pair from the hash table
-	// Returns true if the key was found and removed, false otherwise
-	Delete(key interface{}) bool
-
-	// Contains returns true if the key exists in the hash table
-	Contains(key interface{}) bool
-
-	// IsEmpty returns true if the hash table has no key-value pairs
-	IsEmpty() bool
-
-	// Size returns the number of key-value pairs in the hash table
-	Size() int
-
-	// Clear removes all key-value pairs from the hash table
-	Clear()
-
-	// Keys returns a slice of all keys in the hash table
-	Keys() []interface{}
-
-	// Values returns a slice of all values in the hash table
-	Values() []interface{}
+type HashMap[K comparable, V any] struct {
+	buckets    []*entry[K, V]
+	size       int
+	loadFactor float64
+	hasher     func(K) uint64
 }
 
-// KeyValue represents a key-value pair
-type KeyValue struct {
-	Key   interface{}
-	Value interface{}
+type entry[K comparable, V any] struct {
+	key   K
+	value V
+	next  *entry[K, V]
 }
 
-// ArrayHashTable implements HashTable using a slice of slices (buckets)
-// This is a simple implementation using separate chaining for collision resolution
-type ArrayHashTable struct {
-	// TODO: Add fields to store the hash table data
-	// Hint: You might want to use:
-	// - A slice of slices to implement buckets (separate chaining)
-	// - A size field to track the number of elements
-	// - A capacity field to track the number of buckets
+// I'll use a load factor of 0.75 by default.
+func NewHashMap[K comparable, V any](capacity int, hasher func(K) uint64) *HashMap[K, V] {
+	if capacity < 1 {
+		capacity = 8
+	}
+	if hasher == nil {
+		panic("NewHashMap: hasher must not be nil")
+	}
+	return &HashMap[K, V]{
+		buckets:    make([]*entry[K, V], capacity),
+		loadFactor: 0.75,
+		hasher:     hasher,
+	}
 }
 
-// NewArrayHashTable creates a new empty hash table with default capacity
-func NewArrayHashTable() *ArrayHashTable {
-	// TODO: Initialize and return a new ArrayHashTable
-	// Consider starting with a reasonable default capacity (e.g., 16)
-	return nil
+func NewStringMap[V any](capacity int) *HashMap[string, V] {
+	return NewHashMap[string, V](capacity, func(s string) uint64 {
+		h := fnv.New64a()
+		_, _ = h.Write([]byte(s))
+		return h.Sum64()
+	})
 }
 
-// NewArrayHashTableWithCapacity creates a new empty hash table with specified capacity
-func NewArrayHashTableWithCapacity(capacity int) *ArrayHashTable {
-	// TODO: Initialize and return a new ArrayHashTable with given capacity
-	return nil
+func (h *HashMap[K, V]) Len() int { return h.size }
+
+func (h *HashMap[K, V]) Put(key K, value V) {
+	if float64(h.size+1) > h.loadFactor*float64(len(h.buckets)) {
+		h.resize(len(h.buckets) * 2)
+	}
+	idx := h.index(key)
+	for e := h.buckets[idx]; e != nil; e = e.next {
+		if e.key == key {
+			e.value = value
+			return
+		}
+	}
+	h.buckets[idx] = &entry[K, V]{key: key, value: value, next: h.buckets[idx]}
+	h.size++
 }
 
-// hash function computes the hash code for a given key
-// This is a simple hash function - you might want to improve it
-func (ht *ArrayHashTable) hash(key interface{}) int {
-	// TODO: Implement a hash function
-	// Hint: You can use type assertions to handle different key types
-	// For strings: sum of character codes
-	// For integers: use the integer value directly
-	// For other types: convert to string and hash
-	return 0
+func (h *HashMap[K, V]) Get(key K) (V, bool) {
+	var zero V
+	idx := h.index(key)
+	for e := h.buckets[idx]; e != nil; e = e.next {
+		if e.key == key {
+			return e.value, true
+		}
+	}
+	return zero, false
 }
 
-// TODO: Implement all HashTable interface methods for ArrayHashTable
-// Remember to handle:
-// - Hash collisions using separate chaining
-// - Resizing when the load factor gets too high
-// - Different key types in your hash function
-// - Edge cases like nil keys/values
+func (h *HashMap[K, V]) Delete(key K) (V, bool) {
+	var zero V
+	idx := h.index(key)
+	var prev *entry[K, V]
+	for e := h.buckets[idx]; e != nil; e = e.next {
+		if e.key == key {
+			if prev == nil {
+				h.buckets[idx] = e.next
+			} else {
+				prev.next = e.next
+			}
+			h.size--
+			// Optionally shrink when table is sparse.
+			if len(h.buckets) > 8 && float64(h.size) < 0.25*float64(len(h.buckets)) {
+				h.resize(len(h.buckets) / 2)
+			}
+			return e.value, true
+		}
+		prev = e
+	}
+	return zero, false
+}
+
+func (h *HashMap[K, V]) Contains(key K) bool {
+	_, ok := h.Get(key)
+	return ok
+}
+
+func (h *HashMap[K, V]) Keys() []K {
+	keys := make([]K, 0, h.size)
+	for _, b := range h.buckets {
+		for e := b; e != nil; e = e.next {
+			keys = append(keys, e.key)
+		}
+	}
+	return keys
+}
+
+func (h *HashMap[K, V]) Values() []V {
+	values := make([]V, 0, h.size)
+	for _, b := range h.buckets {
+		for e := b; e != nil; e = e.next {
+			values = append(values, e.value)
+		}
+	}
+	return values
+}
+
+func (h *HashMap[K, V]) Clear() {
+	for i := range h.buckets {
+		h.buckets[i] = nil
+	}
+	h.size = 0
+}
+
+func (h *HashMap[K, V]) index(key K) int {
+	return int(h.hasher(key) % uint64(len(h.buckets)))
+}
+
+func (h *HashMap[K, V]) resize(newCap int) {
+	if newCap < 8 {
+		newCap = 8
+	}
+	newBuckets := make([]*entry[K, V], newCap)
+	for _, b := range h.buckets {
+		for e := b; e != nil; {
+			next := e.next
+			idx := int(h.hasher(e.key) % uint64(newCap))
+			e.next = newBuckets[idx]
+			newBuckets[idx] = e
+			e = next
+		}
+	}
+	h.buckets = newBuckets
+}

@@ -1,112 +1,189 @@
-# Data Structures Implementation Template
+# Implementación de Estructuras de Datos en Go
 
-This project contains templates for three fundamental data structures in Go:
+Este proyecto contiene implementaciones completas de tres estructuras de datos fundamentales en Go:
 
-1. **Stack** - Last-In-First-Out (LIFO) data structure
-2. **Queue** - First-In-First-Out (FIFO) data structure  
-3. **Hash Table** - Key-value mapping with average O(1) operations
+1. **Stack (Pila)** - Estructura de datos Last-In-First-Out (LIFO)
+2. **Queue (Cola)** - Estructura de datos First-In-First-Out (FIFO)  
+3. **Hash Table (Tabla Hash)** - Mapeo clave-valor con operaciones promedio O(1)
 
-## Project Structure
+## Como ejecutarlo
 
-```
-Tarea1/
-├── go.mod              # Go module file
-├── stack.go            # Stack interface and ArrayStack struct
-├── stack_test.go       # Stack tests
-├── queue.go            # Queue interface and ArrayQueue struct
-├── queue_test.go       # Queue tests
-├── hash_table.go       # HashTable interface and ArrayHashTable struct
-├── hash_table_test.go  # HashTable tests
-└── README.md           # This file
-```
+### Ejecutar el Programa Principal
 
-## Implementation Instructions
-
-### 1. Stack Implementation
-
-**File**: `stack.go`
-
-The `ArrayStack` struct needs to be implemented with the following methods:
-- `Push(value interface{})` - Add element to top
-- `Pop() interface{}` - Remove and return top element
-- `Peek() interface{}` - Return top element without removing
-- `IsEmpty() bool` - Check if stack is empty
-- `Size() int` - Return number of elements
-- `Clear()` - Remove all elements
-
-**Hint**: Use a slice to store elements. The "top" of the stack can be the last element in the slice.
-
-### 2. Queue Implementation
-
-**File**: `queue.go`
-
-The `ArrayQueue` struct needs to be implemented with the following methods:
-- `Enqueue(value interface{})` - Add element to rear
-- `Dequeue() interface{}` - Remove and return front element
-- `Front() interface{}` - Return front element without removing
-- `IsEmpty() bool` - Check if queue is empty
-- `Size() int` - Return number of elements
-- `Clear()` - Remove all elements
-
-**Hint**: Use a slice to store elements. You can use the first element as the front and append to the end for the rear. Consider the efficiency of your implementation.
-
-### 3. Hash Table Implementation
-
-**File**: `hash_table.go`
-
-The `ArrayHashTable` struct needs to be implemented with the following methods:
-- `Put(key interface{}, value interface{})` - Store key-value pair
-- `Get(key interface{}) interface{}` - Retrieve value by key
-- `Delete(key interface{}) bool` - Remove key-value pair
-- `Contains(key interface{}) bool` - Check if key exists
-- `IsEmpty() bool` - Check if hash table is empty
-- `Size() int` - Return number of key-value pairs
-- `Clear()` - Remove all key-value pairs
-- `Keys() []interface{}` - Return all keys
-- `Values() []interface{}` - Return all values
-
-**Additional methods to implement**:
-- `hash(key interface{}) int` - Hash function for keys
-
-**Hint**: Use a slice of slices (buckets) to implement separate chaining for collision resolution. The `KeyValue` struct is provided to store key-value pairs in each bucket.
-
-## Running Tests
-
-To test your implementations, run:
+Para correr el demo de las estructuras de datos:
 
 ```bash
-# Test all data structures
+# Navegar al directorio del proyecto
+cd Tarea1
+
+# Ejecutar el programa principal
+go run main.go hash_table.go queue.go stack.go
+```
+
+### Ejecutar Tests
+
+Para ejecutar todos los tests:
+
+```bash
+# Ejecutar todos los tests
 go test
 
-# Test specific data structure
+# Ejecutar tests con salida detallada
+go test -v
+
+# Ejecutar tests de una estructura específica
 go test -run TestArrayStack
 go test -run TestArrayQueue  
 go test -run TestArrayHashTable
-
-# Run tests with verbose output
-go test -v
 ```
 
-## Implementation Tips
+## Casos de Prueba (Test Cases)
 
-1. **Stack**: The slice approach is straightforward - use `append()` for push and slice the last element for pop.
+### 1. Stack (Pila) - `stack_test.go`
 
-2. **Queue**: Consider using two indices (front and rear) or use a circular buffer approach for better efficiency.
+#### **Estado Inicial**
+- Verifica que una pila nueva esté vacía (`IsEmpty()` retorna `true`)
+- Verifica que el tamaño inicial sea 0 (`Size()` retorna `0`)
+- Verifica que `Peek()` en pila vacía retorne `nil`
+- Verifica que `Pop()` en pila vacía retorne `nil`
 
-3. **Hash Table**: 
-   - Implement a simple hash function that works with different data types
-   - Use separate chaining (slice of slices) for collision resolution
-   - Consider implementing resizing when the load factor gets too high
-   - Handle edge cases like nil keys/values
+#### **Operaciones Push y Peek**
+- Prueba `Push()` con elementos individuales
+- Verifica que `IsEmpty()` retorne `false` después de push
+- Verifica que `Size()` se incremente correctamente
+- Verifica que `Peek()` retorne el último elemento agregado (LIFO)
 
-4. **Testing**: All test cases are provided. Make sure your implementation passes all tests before considering it complete.
+#### **Operación Pop**
+- Verifica que `Pop()` retorne el elemento más recientemente agregado
+- Verifica que `Size()` se decremente correctamente
+- Verifica que `Peek()` retorne el nuevo elemento superior después de pop
+- Verifica que la pila quede vacía después de popear todos los elementos
 
-5. **Error Handling**: The interfaces specify return values for edge cases (like nil for empty operations). Make sure to handle these correctly.
+#### **Múltiples Operaciones**
+- Agrega múltiples elementos: `["a", "b", "c", "d", "e"]`
+- Verifica el orden LIFO al hacer pop: `["e", "d", "c", "b", "a"]`
+- Verifica que la pila quede vacía al final
 
-## Expected Behavior
+#### **Operación Clear**
+- Agrega elementos a la pila
+- Ejecuta `Clear()`
+- Verifica que la pila quede vacía y con tamaño 0
+- Verifica que `Peek()` retorne `nil` después de clear
 
-- **Stack**: LIFO behavior - last element pushed is first to be popped
-- **Queue**: FIFO behavior - first element enqueued is first to be dequeued  
-- **Hash Table**: Key-value mapping with average O(1) operations, handles collisions
+#### **Diferentes Tipos de Datos**
+- Prueba con `string`, `int`, `float64`, y `bool`
+- Verifica que se mantenga el orden LIFO con diferentes tipos
 
-Good luck with your implementation!
+### 2. Queue (Cola) - `queue_test.go`
+
+#### **Estado Inicial**
+- Verifica que una cola nueva esté vacía (`IsEmpty()` retorna `true`)
+- Verifica que el tamaño inicial sea 0 (`Size()` retorna `0`)
+- Verifica que `Front()` en cola vacía retorne `nil`
+- Verifica que `Dequeue()` en cola vacía retorne `nil`
+
+#### **Operaciones Enqueue y Front**
+- Prueba `Enqueue()` con elementos individuales
+- Verifica que `IsEmpty()` retorne `false` después de enqueue
+- Verifica que `Size()` se incremente correctamente
+- Verifica que `Front()` retorne el primer elemento agregado (FIFO)
+
+#### **Operación Dequeue**
+- Verifica que `Dequeue()` retorne el primer elemento agregado
+- Verifica que `Size()` se decremente correctamente
+- Verifica que `Front()` retorne el nuevo elemento frontal después de dequeue
+- Verifica que la cola quede vacía después de desencolar todos los elementos
+
+#### **Múltiples Operaciones**
+- Agrega múltiples elementos: `["a", "b", "c", "d", "e"]`
+- Verifica el orden FIFO al hacer dequeue: `["a", "b", "c", "d", "e"]`
+- Verifica que la cola quede vacía al final
+
+#### **Operación Clear**
+- Agrega elementos a la cola
+- Ejecuta `Clear()`
+- Verifica que la cola quede vacía y con tamaño 0
+- Verifica que `Front()` retorne `nil` después de clear
+
+#### **Diferentes Tipos de Datos**
+- Prueba con `string`, `int`, `float64`, y `bool`
+- Verifica que se mantenga el orden FIFO con diferentes tipos
+
+#### **Operaciones Alternadas**
+- Prueba secuencias de enqueue/dequeue intercalados
+- Verifica que se mantenga el orden FIFO en operaciones complejas
+
+### 3. Hash Table (Tabla Hash) - `hash_table_test.go`
+
+#### **Estado Inicial**
+- Verifica que una tabla hash nueva tenga tamaño 0 (`Len()` retorna `0`)
+- Verifica que `Get()` en clave inexistente retorne `false`
+- Verifica que `Contains()` en clave inexistente retorne `false`
+- Verifica que `Delete()` en clave inexistente retorne `false`
+- Verifica que `Keys()` y `Values()` retornen slices vacíos
+
+#### **Operaciones Básicas Put y Get**
+- Prueba `Put()` con pares clave-valor
+- Verifica que `Len()` se incremente correctamente
+- Verifica que `Contains()` retorne `true` para claves existentes
+- Verifica que `Get()` retorne el valor correcto
+
+#### **Actualización de Clave Existente**
+- Actualiza el valor de una clave existente
+- Verifica que `Len()` no cambie
+- Verifica que `Get()` retorne el nuevo valor
+- Verifica que otras claves no se vean afectadas
+
+#### **Operación Delete**
+- Verifica que `Delete()` retorne `true` para claves existentes
+- Verifica que `Len()` se decremente correctamente
+- Verifica que `Contains()` retorne `false` para claves eliminadas
+- Verifica que `Get()` retorne `false` para claves eliminadas
+- Verifica que otras claves no se vean afectadas
+
+#### **Diferentes Tipos de Claves String**
+- Prueba con claves que representan diferentes tipos: `"string_key"`, `"42"`, `"3.14"`, `"true"`
+- Verifica que todas las claves se manejen correctamente
+
+#### **Operaciones Keys y Values**
+- Agrega múltiples pares clave-valor
+- Verifica que `Keys()` retorne todas las claves agregadas
+- Verifica que `Values()` retorne todos los valores agregados
+- Verifica que el orden no importe (usando mapas para verificación)
+
+#### **Operación Clear**
+- Ejecuta `Clear()`
+- Verifica que `Len()` sea 0
+- Verifica que `Keys()` y `Values()` retornen slices vacíos
+
+#### **Colisiones de Hash**
+- Agrega múltiples claves que pueden producir colisiones
+- Verifica que todas las claves se manejen correctamente a pesar de las colisiones
+
+#### **Tabla Hash con Capacidad Personalizada**
+- Crea una tabla hash con capacidad específica
+- Verifica que funcione correctamente con la capacidad dada
+
+## Comportamiento Esperado
+
+- **Stack**: Comportamiento LIFO - el último elemento agregado es el primero en ser removido
+- **Queue**: Comportamiento FIFO - el primer elemento agregado es el primero en ser removido  
+- **Hash Table**: Mapeo clave-valor con operaciones promedio O(1), maneja colisiones correctamente
+
+## Características de las Implementaciones
+
+### Stack
+- Implementado usando slice de Go
+- El "top" de la pila es el último elemento del slice
+- Operaciones `Push()` y `Pop()` son O(1)
+
+### Queue
+- Implementado usando slice de Go con índices front y rear
+- Operaciones `Enqueue()` y `Dequeue()` son O(1) amortizado
+- Maneja eficientemente las operaciones de cola
+
+### Hash Table
+- Implementado usando separate chaining (slice de slices)
+- Función hash personalizada para diferentes tipos de datos
+- Manejo automático de colisiones
+- Operaciones promedio O(1) para put, get y delete

@@ -5,7 +5,7 @@ import (
 )
 
 func TestArrayStack(t *testing.T) {
-	stack := NewArrayStack()
+	stack := &Stack{elements: make([]interface{}, 0)}
 
 	// Test initial state
 	t.Run("Initial state", func(t *testing.T) {
